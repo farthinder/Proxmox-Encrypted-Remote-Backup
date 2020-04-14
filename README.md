@@ -18,6 +18,8 @@ Proxmox Encrypted Remote Backup (PERB) is a vzdump hook script written in Python
 The script is executed by a Proxmox backup job several times (phases) during the backup job, at every execution it´s given information about the backup job which is collected in a job file.
 
 Below several $variables are mentioned, these are found in ProxmoxEncryptedBackupSettings.py
+Encryption is done with default gpg ciphers which on my machine is AES256. 
+The encryption/upload can be done multi-threaded by setting $threads, but it´s not recommended as in most cases the speed of $gpgOutputDirectory will be your bottle neck.
 
 ### Phases
 There are four main phases in a Proxmox backup:
@@ -32,9 +34,11 @@ Below is a flow of events, it doesn't cover absolutely everything but the result
 2. backup-start, backup-stop, a VM is backed up, metadata such as paths to the backup files are put in the job file.
 3. job-end phase, all the VM backups are complete, the job file is parsed to retrieve all the backed up files (.vma and .log)
 4. For every pair of .vma and .log file tar is used to create an uncompressed archive which is piped to gpg.
-5. gpg encrypts the file using a certificate you have previously setup and places them in $gpgOutputDirectory as .enc files. Encryption is done with default gpg ciphers which on my machine is AES256. The encryption can be done multi-threaded by setting $gpgThreads, but it´s not recommended as in most cases the speed of $gpgOutputDirectory will be your bottle neck. Once all the tar files have been encrypted the flow continues. 
-6. The encrypted files are uploaded to the cloud using a preconfigured rclone remote. This can be made multithreaded by setting $rcloneThreads. If $rcloneVerifyUploads is set to True the hash of the local and remote file will be compared. If $rcloneRemoveSourceFile is set to True the local .enc file will be removed (.vma and .log are not deleted)
+5. gpg encrypts the file using a certificate you have previously setup and places them in $gpgOutputDirectory as .enc files. 
+6. The encrypted files are uploaded to the cloud using a preconfigured rclone remote. If $rcloneVerifyUploads is set to True the hash of the local and remote file will be compared. If $rcloneRemoveSourceFile is set to True the local .enc file will be removed (.vma and .log are not deleted)
 7. job files older than $keepJobsForDays are removed.
+
+Steps 4-6 are done in a single thread per VM backup, how many of these threads that are executed at once is determined by $threads
 
 ### Decryption
 Decryption presumes that you have private key for the gpg recipient on you machine and gpg knows about it. To decrypt simply run:
@@ -79,7 +83,7 @@ gpg -d your_archive.enc | tar xz
  - G Suite only allows for about 750GB upload per day
  - PERB is only tested with G Suite, but should function with most rclone remotes, however if they dont support MD5 hashing PERB will need to be updated to handle that.
  - $gpgOutputDirectory should if possible not be set to the same storage as the Proxmox backup as this will severley slowdown encryption. PERB will be reading and writing to the same storage. 
- - Check the logs at $logFile
+ - Check the logs at $logFile and the Proxmox Tasks in the web gui.
 
 
 

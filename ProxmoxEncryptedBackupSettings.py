@@ -21,9 +21,8 @@ gpgRecipient = "farthinder"  # Recipient of the encrypted data. This should matc
 # This folder should have enough space to store the complete backup job output
 # and ideally not be the same storage as the backup job output is located on.
 gpgOutputDirectory = "/mnt/pve/nas02backup/encryptedTemp/"
-gpgThreads = 1  # Number of concurrent threads working on encryption. 1 is recommended if your output directory isn't super quick.
+threads = 2  # Number of concurrent threads working on encryption and upload. 1 is recommended if your output directory isn't super quick.
 
 rcloneRemoteName = "gdriveremote:"  # If root of the remote is given, it should end with :
-rcloneThreads = 5  # Number of concurrent threads running rclone uploads.
 rcloneVerifyUploads = True  # If True, after the upload the local and remote files will have their hashes compared
 rcloneRemoveSourceFile = True  # If True, the upload source file will be deleted after upload. Note this is the .enc file and not the original backup files.
