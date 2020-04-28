@@ -145,7 +145,7 @@ if (Settings.runOldJobId is not None or event == "job-end"):
     threadFutures = []
     threadPool = ThreadPoolExecutor(max_workers=Settings.threads)
     for index in filesToEncrypt:
-        outputFilename = re.search("vzdump-qemu-(.*)\.\w*?$", index["tarfile"])[1]
+        outputFilename = re.search("vzdump-(?:qemu|lxc)-(.*)\.\w*?$", index["tarfile"])[1]
         outputFilename += ".enc"
         threadFutures.append(
             threadPool.submit(encryptAndUploadFiles,
