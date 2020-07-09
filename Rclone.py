@@ -92,6 +92,20 @@ class Rclone:
                 logging.error("\tGdrive upload timed out")
                 sys.exit(1)
 
+    def removeOldFiles(self, tresholdtime, rcloneRemote):
+        logging.info("\tDelete remote files older then " + tresholdtime)
+        self.bash.sendline(f"rclone delete --min-age {tresholdtime} {rcloneRemote}; echo DELETEDONE")
+
+        result = self.bash.expect(["DELETEDONE", pexpect.TIMEOUT])
+
+        if result == 0:
+            logging.info("\t Remote files were removed")
+            return True
+        else:
+            bashOutput = self.bash.read_nonblocking(size=500, timeout=1)
+            logging.error("\tCould not delete old remote files, got:" + bashOutput)
+            sys.exit(1)
+
     def verifyUploadedFile(self, rcloneSourceFile, rcloneRemoteFile):
 
         logging.info("Verifying successful upload of files")
