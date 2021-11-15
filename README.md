@@ -44,7 +44,7 @@ Steps 4-6 are done in a single thread per VM backup, how many of these threads t
 Decryption presumes that you have private key for the gpg recipient on you machine and gpg knows about it. To decrypt simply run:
 
 ```
-gpg -d your_archive.enc | tar xz
+gpg -d your_archive.enc | tar -xv
 ```
 
 ## Installation
