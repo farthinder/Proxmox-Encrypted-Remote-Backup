@@ -117,9 +117,11 @@ def encryptAndUploadFiles(recipient, sourceDirectory, sourceFiles, destinationFo
 
 def cleanupJobFiles():
 
+
     if Settings.rcloneRemoveOldBackups:
+        logging.info("Preparing to remove old backups files from:" + Settings.rcloneRemoteName)
         rclone = Rclone.Rclone()
-        rclone.removeOldFiles(Settings.rcloneRemoveThreshold,Settings.rcloneRemoteName)
+        rclone.removeOldFiles(Settings.rcloneRemoveThreshold,Settings.rcloneRemoteName, dryRun=Settings.rcloneRemoveOldBackupsDryRun)
 
     logging.info("Preparing to remove old job files from:" + Settings.jobFolder)
 
@@ -150,13 +152,13 @@ if (Settings.runOldJobId is not None or event == "job-end"):
     threadFutures = []
     threadPool = ThreadPoolExecutor(max_workers=Settings.threads)
     for index in filesToEncrypt:
-        outputFilename = re.search("vzdump-(?:qemu|lxc)-(.*)\.\w*?$", index["tarfile"])[1]
+        outputFilename = re.search("vzdump-(?:qemu|lxc)-(.*)\.\w*?$", index["targetfile"])[1]
         outputFilename += ".enc"
         threadFutures.append(
             threadPool.submit(encryptAndUploadFiles,
                               recipient=Settings.gpgRecipient,
                               sourceDirectory=pathToFiles,
-                              sourceFiles=[index["tarfile"], index["logfile"]],
+                              sourceFiles=[index["targetfile"], index["logfile"]],
                               destinationFolder=Settings.gpgOutputDirectory,
                               destinationFileName=outputFilename,
                               remoteName=Settings.rcloneRemoteName
@@ -176,3 +178,4 @@ if (Settings.runOldJobId is not None or event == "job-end"):
 
 
     cleanupJobFiles()
+
