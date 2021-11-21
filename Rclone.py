@@ -13,7 +13,7 @@ class Rclone:
     def __init__(self, rcloneLogFilePath=None):
 
         self.rcloneLogFilePath = rcloneLogFilePath
-        self.bash = pexpect.spawn("/bin/bash", echo=False)
+        self.bash = pexpect.spawn("/bin/bash", echo=False, env = {"SHELL": "/bin/bash", "HOME": "/root"})
 
         if self.rcloneLogFilePath is not None:
             self.bash.logfile = open(rcloneLogFilePath, 'wb')
@@ -35,7 +35,6 @@ class Rclone:
         rcloneSourceFileName = '"' + rcloneSourceFileName + '"'
 
         logging.info("\tStarting transfer of " + rcloneSourceFile + " to " + rcloneRemote + rcloneSourceFileName)
-
         self.bash.sendline(
             f"rclone copyto {rcloneSourceFile} {rcloneRemote}{rcloneSourceFileName} -P ; echo RCLONE FINISHED WITH STATUS $?")
 
@@ -91,15 +90,24 @@ class Rclone:
             elif result == 2:
                 logging.error("\tGdrive upload timed out")
                 sys.exit(1)
-
-    def removeOldFiles(self, tresholdtime, rcloneRemote):
-        logging.info("\tDelete remote files older then " + tresholdtime)
-        self.bash.sendline(f"rclone delete --min-age {tresholdtime} {rcloneRemote}; echo DELETEDONE")
+                
+    def removeOldFiles(self, tresholdtime, rcloneRemote, dryRun:bool = True):
+        
+        if dryRun:
+            logging.info("\tRunning dry run of deleting remote files older then " + tresholdtime)
+            logging.info(f"rclone delete --dry-run --min-age {tresholdtime} {rcloneRemote}; echo DELETEDONE")
+            self.bash.sendline(f"rclone delete --dry-run --min-age {tresholdtime} {rcloneRemote}; echo DELETEDONE")
+        else:
+            logging.info("\tDeleting  remote files older then " + tresholdtime)
+            self.bash.sendline(f"rclone delete --min-age {tresholdtime} {rcloneRemote}; echo DELETEDONE")
 
         result = self.bash.expect(["DELETEDONE", pexpect.TIMEOUT])
 
+        deleteOutput = self.bash.before.decode("utf-8")
+        logging.debug(deleteOutput)
+
         if result == 0:
-            logging.info("\t Remote files were removed")
+            logging.info("\t Remote files were removed (Dry Run: " + str(dryRun) + ")")
             return True
         else:
             bashOutput = self.bash.read_nonblocking(size=500, timeout=1)

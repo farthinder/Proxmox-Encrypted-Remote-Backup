@@ -27,4 +27,5 @@ rcloneRemoteName = "gdriveremote:"  # If root of the remote is given, it should 
 rcloneVerifyUploads = True  # If True, after the upload the local and remote files will have their hashes compared
 rcloneRemoveSourceFile = True  # If True, the upload source file will be deleted after upload. Note this is the .enc file and not the original backup files.
 rcloneRemoveOldBackups = False # If True, old remote files will be deleted
+rcloneRemoveOldBackupsDryRun = True #If True AND rcloneRemoveOldBackups is True, will only list files that would be deleted
 rcloneRemoveThreshold = "14d" # Backups older than this threshold are deleted. Format: ms|s|m|h|d|w|M|y. Example: 14d = 14 days

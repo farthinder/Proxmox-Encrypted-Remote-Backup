@@ -23,6 +23,11 @@ class ProxmoxEventHandler:
         logging.info("Job File:" + self.jobFilePath)
         logging.debug("Raw Input parameters:" + ",".join(sys.argv))
 
+
+        if not os.path.exists(jobFolder):
+            logging.debug("Job folder does not already exist, creating it.")
+            os.makedirs(jobFolder)
+
         parser = argparse.ArgumentParser()
         parser.add_argument("phase", help="backup phase")
         parser.add_argument("attributes", help="backup attributes mode and vmid", nargs='*')
@@ -149,8 +154,8 @@ class ProxmoxEventHandler:
             dumpdir = os.environ["DUMPDIR"]
             storeid = os.environ["STOREID"]
             hostname = os.environ["HOSTNAME"]
-            # tarfile is only available in phase 'backup-end'
-            tarfile = os.environ["TARFILE"]
+            # TARGET is only available in phase 'backup-end'
+            targetfile = os.environ["TARGET"] #Contains the full path to the current VM backup file
             # logfile is only available in phase 'log-end'
             logfile = os.environ["LOGFILE"]
 
@@ -171,7 +176,7 @@ class ProxmoxEventHandler:
                 'dumpdir': dumpdir,
                 'storeid': storeid,
                 'hostname': hostname,
-                'tarfile': tarfile,
+                'targetfile': targetfile,
                 'logfile': logfile,
                 'mode': mode
             }
@@ -189,10 +194,10 @@ class ProxmoxEventHandler:
 
     '''
 
-    Returns a an array with dics with quoted tarfile and logfile elements:
+    Returns a an array with dics with quoted targetfile and logfile elements:
         [
-            {tarfile: "vzdump-qemu-107-2019_12_29-23_22_54.vma",logfile: "vzdump-qemu-107-2019_12_29-23_22_54.log"},
-            {tarfile: "vzdump-qemu-108-2019_12_29-23_22_54.vma",logfile: "vzdump-qemu-108-2019_12_29-23_22_54.log"},
+            {targetfile: "vzdump-qemu-107-2019_12_29-23_22_54.vma",logfile: "vzdump-qemu-107-2019_12_29-23_22_54.log"},
+            {targetfile: "vzdump-qemu-108-2019_12_29-23_22_54.vma",logfile: "vzdump-qemu-108-2019_12_29-23_22_54.log"},
         ]
     '''
     def getFilesFromPhase(self, phase):
@@ -200,10 +205,10 @@ class ProxmoxEventHandler:
         filePaths = []
 
         for x in self.jobinfo[phase]:
-            tarfile = self.jobinfo[phase][x]["tarfile"].split("/")[-1]
+            targetfile = self.jobinfo[phase][x]["targetfile"].split("/")[-1]
             logfile =  self.jobinfo[phase][x]["logfile"].split("/")[-1]
 
-            filePaths.append({"tarfile" : tarfile, "logfile" : logfile})
+            filePaths.append({"targetfile" : targetfile, "logfile" : logfile})
 
         logging.debug("Got " + str(len(filePaths) * 2) + " files")
 
