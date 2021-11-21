@@ -116,6 +116,11 @@ def encryptAndUploadFiles(recipient, sourceDirectory, sourceFiles, destinationFo
 
 
 def cleanupJobFiles():
+
+    if Settings.rcloneRemoveOldBackups:
+        rclone = Rclone.Rclone()
+        rclone.removeOldFiles(Settings.rcloneRemoveThreshold,Settings.rcloneRemoteName)
+
     logging.info("Preparing to remove old job files from:" + Settings.jobFolder)
 
     now = time.time()
